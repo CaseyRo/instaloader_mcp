@@ -102,7 +102,7 @@ The server exposes two MCP tools:
 Fetch an Instagram post by URL or shortcode.
 
 **Parameters:**
-- `url` (string): Instagram post URL (e.g., `"https://www.instagram.com/p/DRr-n4XER3x/"`) or shortcode (e.g., `"DRr-n4XER3x"`)
+- `url` (string, required): Instagram post URL (e.g., `"https://www.instagram.com/p/DRr-n4XER3x/"`) or shortcode (e.g., `"DRr-n4XER3x"`)
 
 **Returns:**
 ```json
@@ -127,7 +127,7 @@ Fetch an Instagram post by URL or shortcode.
 Fetch an Instagram reel by URL or shortcode.
 
 **Parameters:**
-- `url` (string): Instagram reel URL (e.g., `"https://www.instagram.com/reel/ABC123/"`) or shortcode
+- `url` (string, required): Instagram reel URL (e.g., `"https://www.instagram.com/reel/ABC123/"`) or shortcode
 
 **Returns:**
 Same format as `fetch_instagram_post`.
@@ -151,6 +151,8 @@ curl -X POST http://localhost:3336/mcp \
     }
   }'
 ```
+
+Note: The MCP tools only accept the `url` argument. Extra fields will be rejected.
 
 ## Testing
 

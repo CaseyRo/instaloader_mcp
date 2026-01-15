@@ -1,12 +1,12 @@
 """FastMCP server for Instagram content fetching."""
 
 import os
-from typing import Optional
 from dotenv import load_dotenv
 from fastmcp import FastMCP
+from pydantic import Field
 
 from .instaloader_client import InstaloaderClient
-from .url_parser import extract_shortcode, is_valid_instagram_url
+from .url_parser import is_valid_instagram_url
 from .update_checker import check_for_updates
 from instaloader.exceptions import (
     LoginRequiredException,
@@ -28,7 +28,15 @@ instaloader_client = InstaloaderClient(cookie_file=COOKIE_FILE)
 
 
 @mcp.tool()
-async def fetch_instagram_post(url: str) -> dict:
+async def fetch_instagram_post(
+    url: str = Field(
+        ...,
+        description=(
+            "Instagram post URL (e.g., https://www.instagram.com/p/DRr-n4XER3x/) "
+            "or shortcode (e.g., DRr-n4XER3x)."
+        ),
+    ),
+) -> dict:
     """
     Fetch an Instagram post by URL or shortcode and return its text content as JSON.
     
@@ -93,7 +101,15 @@ async def fetch_instagram_post(url: str) -> dict:
 
 
 @mcp.tool()
-async def fetch_instagram_reel(url: str) -> dict:
+async def fetch_instagram_reel(
+    url: str = Field(
+        ...,
+        description=(
+            "Instagram reel URL (e.g., https://www.instagram.com/reel/ABC123/) "
+            "or shortcode (e.g., ABC123)."
+        ),
+    ),
+) -> dict:
     """
     Fetch an Instagram reel by URL or shortcode and return its text content as JSON.
     
