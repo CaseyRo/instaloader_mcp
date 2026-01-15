@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  instaloader-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: instaloader-mcp-server
+    ports:
+      - "${MCP_PORT:-3336}:${MCP_PORT:-3336}"
+    environment:
+      - MCP_PORT=${MCP_PORT:-3336}
+      - COOKIE_FILE=${COOKIE_FILE:-}
+    env_file:
+      - .env
+    volumes:
+      # Mount cookie file if provided (optional)
+      # Uncomment and adjust path if you need to mount a cookie file:
+      # - ./cookies.txt:/app/cookies.txt:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:${MCP_PORT:-3336}/')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s

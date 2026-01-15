@@ -1,0 +1,9 @@
+# Example Instagram URLs for testing
+# One URL per line
+# Lines starting with # are treated as comments
+# Empty lines are ignored
+
+https://www.instagram.com/p/DRr-n4XER3x/
+https://www.instagram.com/p/DTDy4fMDCc4/
+https://www.instagram.com/p/DQUVv9kANPh/
+https://www.instagram.com/p/DSNKaEZjIR9/
