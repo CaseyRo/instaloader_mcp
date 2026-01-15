@@ -22,5 +22,5 @@ EXPOSE 3336
 # Set environment variable for port (can be overridden)
 ENV MCP_PORT=3336
 
-# Run the server
-CMD ["python", "src/server.py"]
+# Run the server as a module so relative imports work
+CMD ["python", "-m", "src.server"]
