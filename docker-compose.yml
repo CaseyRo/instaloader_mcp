@@ -13,7 +13,7 @@ services:
       - COOKIE_FILE=${COOKIE_FILE:-}
     env_file:
       - .env
-    volumes:
+    # volumes:
       # Mount cookie file if provided (optional)
       # Uncomment and adjust path if you need to mount a cookie file:
       # - ./cookies.txt:/app/cookies.txt:ro
