@@ -77,6 +77,20 @@ To access private Instagram posts/reels, you'll need to provide a session cookie
 
 2. Set the `COOKIE_FILE` environment variable or in `.env` to point to your session file.
 
+#### Logging in via Docker
+
+You can create a session inside the container and persist it locally:
+
+```bash
+docker compose run --rm instaloader-mcp instaloader --login your_username
+```
+
+This stores the session under `/root/.config/instaloader/session-your_username` in the container. The `docker-compose.yml` file mounts `./instaloader_sessions` to persist these sessions, so you can set:
+
+```env
+COOKIE_FILE=/root/.config/instaloader/session-your_username
+```
+
 Note: The exact cookie file format depends on how you export your Instagram session. See `instaloader` documentation for details.
 
 ## API Usage
