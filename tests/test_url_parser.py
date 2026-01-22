@@ -1,6 +1,5 @@
 """Tests for URL parser."""
 
-import pytest
 from src.url_parser import extract_shortcode, is_valid_instagram_url
 
 

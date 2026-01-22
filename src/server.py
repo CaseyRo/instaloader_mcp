@@ -1,23 +1,35 @@
 """FastMCP server for Instagram content fetching."""
 
 import os
+
 from dotenv import load_dotenv
 from fastmcp import FastMCP
+from instaloader.exceptions import (
+    InstaloaderException,
+    LoginRequiredException,
+)
 from pydantic import Field
 
 from .instaloader_client import InstaloaderClient
-from .url_parser import is_valid_instagram_url
+from .rate_limiter import RateLimitMiddleware
 from .update_checker import check_for_updates
-from instaloader.exceptions import (
-    LoginRequiredException,
-    InstaloaderException,
-)
+from .url_parser import is_valid_instagram_url
 
 # Load environment variables
 load_dotenv()
 
-# Initialize FastMCP server
-mcp = FastMCP("Instaloader MCP Server")
+# Get rate limit configuration from environment
+RATE_LIMIT_REQUESTS = int(os.getenv("RATE_LIMIT_REQUESTS", "10"))
+RATE_LIMIT_WINDOW = int(os.getenv("RATE_LIMIT_WINDOW", "60"))
+
+# Initialize rate limiting middleware
+rate_limiter = RateLimitMiddleware(
+    requests_per_window=RATE_LIMIT_REQUESTS,
+    window_seconds=RATE_LIMIT_WINDOW,
+)
+
+# Initialize FastMCP server with middleware
+mcp = FastMCP("Instaloader MCP Server", middleware=[rate_limiter])
 
 # Get configuration from environment
 MCP_PORT = int(os.getenv("MCP_PORT", "3336"))
@@ -39,11 +51,11 @@ async def fetch_instagram_post(
 ) -> dict:
     """
     Fetch an Instagram post by URL or shortcode and return its text content as JSON.
-    
+
     Args:
-        url: Instagram post URL (e.g., "https://www.instagram.com/p/DRr-n4XER3x/") 
+        url: Instagram post URL (e.g., "https://www.instagram.com/p/DRr-n4XER3x/")
              or shortcode (e.g., "DRr-n4XER3x")
-    
+
     Returns:
         Dictionary containing:
         - text: Post caption/text content
@@ -62,13 +74,13 @@ async def fetch_instagram_post(
                 "error": "Invalid Instagram URL format",
                 "url": url,
             }
-        
+
         # Fetch post data
         post_data = await instaloader_client.fetch_post(url)
-        
+
         # Get update information
         update_info = await check_for_updates()
-        
+
         # Combine post data with update info
         return {
             **post_data,
@@ -112,11 +124,11 @@ async def fetch_instagram_reel(
 ) -> dict:
     """
     Fetch an Instagram reel by URL or shortcode and return its text content as JSON.
-    
+
     Args:
-        url: Instagram reel URL (e.g., "https://www.instagram.com/reel/ABC123/") 
+        url: Instagram reel URL (e.g., "https://www.instagram.com/reel/ABC123/")
              or shortcode (e.g., "ABC123")
-    
+
     Returns:
         Dictionary containing:
         - text: Reel caption/text content
@@ -135,13 +147,13 @@ async def fetch_instagram_reel(
                 "error": "Invalid Instagram URL format",
                 "url": url,
             }
-        
+
         # Fetch reel data (reels are posts with video content)
         reel_data = await instaloader_client.fetch_reel(url)
-        
+
         # Get update information
         update_info = await check_for_updates()
-        
+
         # Combine reel data with update info
         return {
             **reel_data,

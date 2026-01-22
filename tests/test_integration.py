@@ -1,10 +1,11 @@
 """Integration tests for the MCP server."""
 
-import pytest
-import os
 from pathlib import Path
-from src.server import mcp
+
+import pytest
+
 from src.instaloader_client import InstaloaderClient
+from src.server import mcp
 
 
 def read_example_urls() -> list[str]:
@@ -23,10 +24,10 @@ def read_example_urls() -> list[str]:
 async def test_fetch_public_post():
     """Test fetching a public post without authentication."""
     client = InstaloaderClient()
-    
+
     # Use one of the example URLs
     url = "https://www.instagram.com/p/DRr-n4XER3x/"
-    
+
     try:
         result = await client.fetch_post(url)
         assert "text" in result
@@ -42,9 +43,9 @@ async def test_fetch_post_from_example_urls():
     """Test fetching posts from example URLs file."""
     urls = read_example_urls()
     assert len(urls) >= 4, "Should have at least 4 example URLs"
-    
+
     client = InstaloaderClient()
-    
+
     # Test first URL
     url = urls[0]
     try:
@@ -58,7 +59,7 @@ async def test_fetch_post_from_example_urls():
 async def test_url_parsing_in_fetch():
     """Test that URL parsing works correctly in fetch operations."""
     client = InstaloaderClient()
-    
+
     # Test with full URL
     url = "https://www.instagram.com/p/DRr-n4XER3x/"
     try:
@@ -72,7 +73,7 @@ async def test_url_parsing_in_fetch():
 async def test_invalid_url_handling():
     """Test handling of invalid URLs."""
     client = InstaloaderClient()
-    
+
     with pytest.raises(ValueError):
         await client.fetch_post("https://example.com/invalid")
 

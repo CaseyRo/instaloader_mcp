@@ -10,7 +10,7 @@ WORKDIR /app
 COPY pyproject.toml README.md ./
 
 # Install dependencies using UV
-RUN uv pip install --system -e .
+RUN uv pip install --system --prerelease=allow -e .
 
 # Copy application code
 COPY src/ ./src/

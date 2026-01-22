@@ -3,10 +3,10 @@ import argparse
 import json
 import sys
 import urllib.request
-from typing import Any, Dict, Optional
+from typing import Any
 
 
-def _read_stdin_json() -> Optional[Dict[str, Any]]:
+def _read_stdin_json() -> dict[str, Any] | None:
     if sys.stdin.isatty():
         return None
     raw = sys.stdin.read().strip()
@@ -18,7 +18,7 @@ def _read_stdin_json() -> Optional[Dict[str, Any]]:
         return None
 
 
-def _find_url(value: Any) -> Optional[str]:
+def _find_url(value: Any) -> str | None:
     if isinstance(value, str):
         if "instagram.com/" in value:
             return value
@@ -40,7 +40,7 @@ def _find_url(value: Any) -> Optional[str]:
     return None
 
 
-def _extract_url(payload: Optional[Dict[str, Any]]) -> Optional[str]:
+def _extract_url(payload: dict[str, Any] | None) -> str | None:
     if not payload:
         return None
     paths = [
@@ -62,7 +62,7 @@ def _extract_url(payload: Optional[Dict[str, Any]]) -> Optional[str]:
     return _find_url(payload)
 
 
-def _build_mcp_url(host: str, port: str, mcp_url: Optional[str]) -> str:
+def _build_mcp_url(host: str, port: str, mcp_url: str | None) -> str:
     if mcp_url:
         return mcp_url
     if host.startswith(("http://", "https://")):
@@ -72,7 +72,9 @@ def _build_mcp_url(host: str, port: str, mcp_url: Optional[str]) -> str:
     return f"http://{host}:{port}/mcp"
 
 
-def _post_json(url: str, payload: Dict[str, Any], headers: Dict[str, str]) -> tuple[Dict[str, str], str]:
+def _post_json(
+    url: str, payload: dict[str, Any], headers: dict[str, str]
+) -> tuple[dict[str, str], str]:
     data = json.dumps(payload).encode("utf-8")
     request = urllib.request.Request(url, data=data, headers=headers, method="POST")
     with urllib.request.urlopen(request, timeout=30) as response:
@@ -92,18 +94,31 @@ def _parse_sse_data(body: str) -> str:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Call Instaloader MCP tools with a URL only.")
-    parser.add_argument("host", nargs="?", default="192.168.1.5", help="Host or host:port")
-    parser.add_argument("port", nargs="?", default="3336", help="Port if host has no port")
-    parser.add_argument("--mcp-url", dest="mcp_url", help="Full MCP URL (overrides host/port)")
-    parser.add_argument("--tool", default="fetch_instagram_reel", help="Tool name to call")
+    parser = argparse.ArgumentParser(
+        description="Call Instaloader MCP tools with a URL only."
+    )
+    parser.add_argument(
+        "host", nargs="?", default="192.168.1.5", help="Host or host:port"
+    )
+    parser.add_argument(
+        "port", nargs="?", default="3336", help="Port if host has no port"
+    )
+    parser.add_argument(
+        "--mcp-url", dest="mcp_url", help="Full MCP URL (overrides host/port)"
+    )
+    parser.add_argument(
+        "--tool", default="fetch_instagram_reel", help="Tool name to call"
+    )
     parser.add_argument("--url", help="Instagram URL to fetch")
     args = parser.parse_args()
 
     input_payload = _read_stdin_json()
     url = args.url or _extract_url(input_payload)
     if not url:
-        print("Error: no Instagram URL found. Provide --url or JSON on stdin.", file=sys.stderr)
+        print(
+            "Error: no Instagram URL found. Provide --url or JSON on stdin.",
+            file=sys.stderr,
+        )
         return 2
 
     mcp_url = _build_mcp_url(args.host, args.port, args.mcp_url)
