@@ -5,6 +5,7 @@ import os
 from dotenv import load_dotenv
 from fastmcp import FastMCP
 from instaloader.exceptions import (
+    ConnectionException,
     InstaloaderException,
     LoginRequiredException,
 )
@@ -72,6 +73,8 @@ async def fetch_instagram_post(
         if not is_valid_instagram_url(url):
             return {
                 "error": "Invalid Instagram URL format",
+                "error_code": "INVALID_URL_FORMAT",
+                "message": f"The provided URL '{url}' is not a valid Instagram URL format. Expected format: https://www.instagram.com/p/{'{shortcode}'}/ or shortcode only.",
                 "url": url,
             }
 
@@ -89,25 +92,37 @@ async def fetch_instagram_post(
     except LoginRequiredException as e:
         return {
             "error": "Authentication required",
-            "message": str(e),
+            "error_code": "AUTHENTICATION_REQUIRED",
+            "message": f"{str(e)} Please provide a valid session cookie file via COOKIE_FILE environment variable. You can create one by running 'instaloader --login your_username'.",
             "url": url,
+        }
+    except ConnectionException as e:
+        return {
+            "error": "Network error",
+            "error_code": "NETWORK_ERROR",
+            "message": f"Failed to connect to Instagram: {str(e)}. Please check your internet connection and try again.",
+            "url": url,
+            "retry_hint": "This may be a temporary network issue. Please retry after a few moments.",
         }
     except ValueError as e:
         return {
-            "error": "Invalid URL or post not found",
-            "message": str(e),
+            "error": "Post not found",
+            "error_code": "POST_NOT_FOUND",
+            "message": f"{str(e)} The post may have been deleted, made private, or the URL/shortcode is incorrect.",
             "url": url,
         }
     except InstaloaderException as e:
         return {
             "error": "Error fetching post",
-            "message": str(e),
+            "error_code": "INSTALOADER_ERROR",
+            "message": f"An error occurred while fetching the post: {str(e)}",
             "url": url,
         }
     except Exception as e:
         return {
             "error": "Unexpected error",
-            "message": str(e),
+            "error_code": "UNEXPECTED_ERROR",
+            "message": f"An unexpected error occurred: {str(e)}",
             "url": url,
         }
 
@@ -145,6 +160,8 @@ async def fetch_instagram_reel(
         if not is_valid_instagram_url(url):
             return {
                 "error": "Invalid Instagram URL format",
+                "error_code": "INVALID_URL_FORMAT",
+                "message": f"The provided URL '{url}' is not a valid Instagram URL format. Expected format: https://www.instagram.com/reel/{'{shortcode}'}/ or shortcode only.",
                 "url": url,
             }
 
@@ -162,25 +179,37 @@ async def fetch_instagram_reel(
     except LoginRequiredException as e:
         return {
             "error": "Authentication required",
-            "message": str(e),
+            "error_code": "AUTHENTICATION_REQUIRED",
+            "message": f"{str(e)} Please provide a valid session cookie file via COOKIE_FILE environment variable. You can create one by running 'instaloader --login your_username'.",
             "url": url,
+        }
+    except ConnectionException as e:
+        return {
+            "error": "Network error",
+            "error_code": "NETWORK_ERROR",
+            "message": f"Failed to connect to Instagram: {str(e)}. Please check your internet connection and try again.",
+            "url": url,
+            "retry_hint": "This may be a temporary network issue. Please retry after a few moments.",
         }
     except ValueError as e:
         return {
-            "error": "Invalid URL or reel not found",
-            "message": str(e),
+            "error": "Reel not found",
+            "error_code": "REEL_NOT_FOUND",
+            "message": f"{str(e)} The reel may have been deleted, made private, or the URL/shortcode is incorrect.",
             "url": url,
         }
     except InstaloaderException as e:
         return {
             "error": "Error fetching reel",
-            "message": str(e),
+            "error_code": "INSTALOADER_ERROR",
+            "message": f"An error occurred while fetching the reel: {str(e)}",
             "url": url,
         }
     except Exception as e:
         return {
             "error": "Unexpected error",
-            "message": str(e),
+            "error_code": "UNEXPECTED_ERROR",
+            "message": f"An unexpected error occurred: {str(e)}",
             "url": url,
         }
 

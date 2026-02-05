@@ -44,28 +44,67 @@ class InstaloaderClient:
 
     def _load_session(self, cookie_file: str) -> None:
         """
-        Load session from cookie file.
+        Load session from cookie file using instaloader's native API.
 
         Note: Instaloader expects session files in its own format, typically
         created by running `instaloader --login username`. The cookie_file
-        path should point to a directory containing session files, or we
-        can use instaloader's context.load_session_from_file() method.
+        path can be:
+        - A directory containing session files (e.g., `/root/.config/instaloader/`)
+        - A specific session file path (e.g., `/root/.config/instaloader/session-username`)
+        - A username string (instaloader will use default session path)
 
-        For now, this is a placeholder. Full implementation would:
-        1. Parse the cookie file path to extract username
-        2. Use instaloader's session loading mechanism
-        3. Handle errors gracefully
+        This method uses instaloader's `load_session_from_file()` API to properly
+        load the session.
         """
-        # TODO: Implement proper session loading using instaloader's API
-        # For now, session loading is handled by instaloader's context
-        # when needed. The cookie_file should point to instaloader session directory.
         try:
-            # If cookie_file is a directory, instaloader can load sessions from there
-            # For now, we mark session as available if file/directory exists
-            if os.path.exists(cookie_file):
+            if not os.path.exists(cookie_file):
+                # Path doesn't exist, mark session as not loaded
+                self._session_loaded = False
+                return
+
+            # Check if cookie_file is a directory or file
+            if os.path.isdir(cookie_file):
+                # It's a directory - try to find session files
+                # Instaloader stores sessions as "session-{username}" files
+                session_files = [
+                    f
+                    for f in os.listdir(cookie_file)
+                    if f.startswith("session-")
+                    and os.path.isfile(os.path.join(cookie_file, f))
+                ]
+                if session_files:
+                    # Extract username from first session file found
+                    # Format: session-{username}
+                    username = session_files[0].replace("session-", "", 1)
+                    session_path = os.path.join(cookie_file, session_files[0])
+                    self.loader.load_session_from_file(username, session_path)
+                    self._session_loaded = True
+                else:
+                    # No session files found in directory
+                    self._session_loaded = False
+            elif os.path.isfile(cookie_file):
+                # It's a file - try to extract username from filename
+                # Format: session-{username} or just the file path
+                filename = os.path.basename(cookie_file)
+                if filename.startswith("session-"):
+                    username = filename.replace("session-", "", 1)
+                    self.loader.load_session_from_file(username, cookie_file)
+                    self._session_loaded = True
+                else:
+                    # File doesn't match expected format, try as username
+                    # This handles cases where cookie_file is just a username
+                    self.loader.load_session_from_file(cookie_file)
+                    self._session_loaded = True
+            else:
+                # Treat as username string (instaloader will use default path)
+                self.loader.load_session_from_file(cookie_file)
                 self._session_loaded = True
+        except FileNotFoundError:
+            # Session file doesn't exist
+            self._session_loaded = False
         except Exception:
-            # If loading fails, continue without authentication
+            # Any other error during session loading
+            # Continue without authentication
             self._session_loaded = False
 
     async def fetch_post(self, url_or_shortcode: str) -> dict[str, Any]:
