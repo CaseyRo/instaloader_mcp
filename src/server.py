@@ -10,6 +10,7 @@ from instaloader.exceptions import (
     LoginRequiredException,
 )
 from pydantic import Field
+from starlette.responses import JSONResponse
 
 from .instaloader_client import InstaloaderClient
 from .rate_limiter import RateLimitMiddleware
@@ -212,6 +213,16 @@ async def fetch_instagram_reel(
             "message": f"An unexpected error occurred: {str(e)}",
             "url": url,
         }
+
+
+@mcp.custom_route("/health", methods=["GET"])
+async def health_check(request):
+    """Health check endpoint for Docker/load balancer probes."""
+    return JSONResponse({"status": "healthy", "service": "instaloader-mcp"})
+
+
+# ASGI app for production deployment with uvicorn
+app = mcp.http_app()
 
 
 if __name__ == "__main__":

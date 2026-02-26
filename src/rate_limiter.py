@@ -3,7 +3,7 @@
 import time
 from collections import defaultdict
 
-from fastmcp.server.middleware import CallNext, Middleware, MiddlewareContext
+from fastmcp.server.middleware import Middleware, MiddlewareContext
 from mcp import types as mt
 
 
@@ -57,12 +57,12 @@ class RateLimitMiddleware(Middleware):
         """Record a new request for the session."""
         self._requests[session_id].append(time.time())
 
-    async def on_call_tool(
-        self,
-        context: MiddlewareContext[mt.CallToolRequestParams],
-        call_next: CallNext[mt.CallToolRequestParams, mt.CallToolResult],
-    ) -> mt.CallToolResult:
+    async def __call__(self, context: MiddlewareContext, call_next):
         """Rate limit tool calls."""
+        # Only rate-limit tool calls, pass through everything else
+        if context.method != "tools/call":
+            return await call_next(context)
+
         session_id = self._get_session_id(context)
 
         if self._is_rate_limited(session_id):

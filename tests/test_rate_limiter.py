@@ -93,35 +93,54 @@ class TestRateLimitMiddleware:
         assert limiter._get_session_id(context) == "my-session-id"
 
     @pytest.mark.asyncio
-    async def test_on_call_tool_allowed(self):
+    async def test_call_tool_allowed(self):
         """Test that tool calls within limit are allowed."""
         limiter = RateLimitMiddleware(requests_per_window=5, window_seconds=60)
 
         context = MagicMock()
+        context.method = "tools/call"
         context.session.id = "test-session"
 
         call_next = AsyncMock(return_value="tool_result")
 
-        result = await limiter.on_call_tool(context, call_next)
+        result = await limiter(context, call_next)
 
         assert result == "tool_result"
         call_next.assert_called_once_with(context)
 
     @pytest.mark.asyncio
-    async def test_on_call_tool_rate_limited(self):
+    async def test_call_tool_rate_limited(self):
         """Test that tool calls over limit return error."""
         limiter = RateLimitMiddleware(requests_per_window=1, window_seconds=60)
 
         context = MagicMock()
+        context.method = "tools/call"
         context.session.id = "test-session"
 
         call_next = AsyncMock(return_value="tool_result")
 
         # First call should succeed
-        result1 = await limiter.on_call_tool(context, call_next)
+        result1 = await limiter(context, call_next)
         assert result1 == "tool_result"
 
         # Second call should be rate limited
-        result2 = await limiter.on_call_tool(context, call_next)
+        result2 = await limiter(context, call_next)
         assert result2.isError is True
         assert "Rate limit exceeded" in result2.content[0].text
+
+    @pytest.mark.asyncio
+    async def test_non_tool_calls_pass_through(self):
+        """Test that non-tool-call methods are not rate limited."""
+        limiter = RateLimitMiddleware(requests_per_window=1, window_seconds=60)
+
+        context = MagicMock()
+        context.method = "resources/read"
+        context.session.id = "test-session"
+
+        call_next = AsyncMock(return_value="resource_result")
+
+        # Should always pass through regardless of rate limit
+        result1 = await limiter(context, call_next)
+        result2 = await limiter(context, call_next)
+        assert result1 == "resource_result"
+        assert result2 == "resource_result"
